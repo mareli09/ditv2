@@ -1,0 +1,81 @@
+{% extends 'dashboard/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}IT Dashboard{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-semibold">Welcome, {{ user.username }}</h1>
+    <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+        <button type="submit" class="block text-white bg-gray-800 hover:bg-black px-4 py-2 rounded w-full text-left">
+            Logout
+        </button>
+    </form>
+</div>
+<h1 class="text-3xl font-semibold mb-6">IT Staff Dashboard</h1>
+
+<!-- User List -->
+<h2 class="text-xl font-bold mb-4">All Users</h2>
+<table class="min-w-full bg-white rounded-xl shadow-md mb-10">
+    <thead class="bg-gray-100">
+        <tr>
+            <th class="text-left px-4 py-2">Username</th>
+            <th class="text-left px-4 py-2">Full Name</th>
+            <th class="text-left px-4 py-2">Role</th>
+            <th class="text-left px-4 py-2">Department</th>
+            <th class="text-left px-4 py-2">Status</th>
+            <th class="text-left px-4 py-2">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr class="border-t">
+            <td class="px-4 py-2">{{ user.username }}</td>
+            <td class="px-4 py-2">{{ user.first_name }} {{ user.last_name }}</td>
+            <td class="px-4 py-2 capitalize">{{ user.role }}</td>
+            <td class="px-4 py-2">{{ user.department }}</td>
+            <td class="px-4 py-2">
+                {% if user.is_active %}
+                    <span class="text-green-600 font-semibold">Active</span>
+                {% else %}
+                    <span class="text-red-600 font-semibold">Inactive</span>
+                {% endif %}
+            </td>
+            <td class="px-4 py-2">
+                <form method="post" action="{% url 'toggle_user_status' user.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="px-3 py-1 text-sm rounded bg-blue-600 text-white hover:bg-blue-800">
+                        {% if user.is_active %}Deactivate{% else %}Activate{% endif %}
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Add User Form -->
+<h2 class="text-xl font-bold mb-4">Add New User</h2>
+<form method="post" action="{% url 'add_user' %}" class="bg-white p-6 rounded-xl shadow-md space-y-4">
+    {% csrf_token %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input name="username" type="text" placeholder="Username" class="p-2 border rounded w-full" required>
+        <input name="password" type="password" placeholder="Password" class="p-2 border rounded w-full" required>
+        <input name="first_name" type="text" placeholder="First Name" class="p-2 border rounded w-full" required>
+        <input name="middle_name" type="text" placeholder="Middle Name" class="p-2 border rounded w-full">
+        <input name="last_name" type="text" placeholder="Last Name" class="p-2 border rounded w-full" required>
+        <input name="id_number" type="text" placeholder="ID Number" class="p-2 border rounded w-full" required>
+        <input name="department" type="text" placeholder="Department" class="p-2 border rounded w-full">
+        <input name="section" type="text" placeholder="Section" class="p-2 border rounded w-full">
+        <input name="course" type="text" placeholder="Course (if student)" class="p-2 border rounded w-full">
+        <select name="role" class="p-2 border rounded w-full">
+            <option value="student">Student</option>
+            <option value="faculty">Faculty</option>
+            <option value="admin">CESO Staff</option>
+            <option value="it_staff">IT Staff</option>
+        </select>
+    </div>
+    <button type="submit" class="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-800">Create User</button>
+</form>
+{% endblock %}

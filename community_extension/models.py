@@ -5,11 +5,25 @@ class CustomUser(AbstractUser):
     ROLE_CHOICES = (
         ('student', 'Student'),
         ('faculty', 'Faculty'),
-        ('admin', 'Admin'),
+        ('ceso_staff', 'CESO Staff'),
+        ('it_staff', 'IT Staff'),
     )
-    role = models.CharField(max_length=50, choices=ROLE_CHOICES, default='student')
-    section = models.CharField(max_length=50)
+    STATUS_CHOICES = (
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+    )
 
+    role = models.CharField(max_length=50, choices=ROLE_CHOICES, default='student')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
+    id_number = models.CharField(max_length=50)
+    first_name = models.CharField(max_length=150)
+    middle_name = models.CharField(max_length=150, blank=True, null=True)
+    last_name = models.CharField(max_length=150)
+    department = models.CharField(max_length=100, blank=True, null=True)
+    section = models.CharField(max_length=50, blank=True, null=True)
+    course = models.CharField(max_length=100, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.username} ({self.role})"
@@ -46,3 +60,14 @@ class Certificate(models.Model):
 
     def __str__(self):
         return f"Certificate: {self.user.username} - {self.activity.title}"
+
+
+class ActivityLog(models.Model):
+    actor = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name='actions')
+    action = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    affected_user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name='logs')
+
+    def __str__(self):
+        return f"{self.timestamp}: {self.actor} -> {self.action}"
+    

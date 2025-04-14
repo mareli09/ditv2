@@ -32,5 +32,13 @@ urlpatterns = [
     #logoutview
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
     
+    #itstaff
+    path('dashboard/it/', views.it_dashboard, name='it_dashboard'),
 
+    #urlpatterns
+    # IT staff management
+    path('dashboard/it/toggle-status/<int:user_id>/', views.toggle_user_status, name='toggle_user_status'),
+    path('dashboard/it/add-user/', views.add_user, name='add_user'),
+
+    
 ]
