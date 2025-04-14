@@ -9,6 +9,9 @@ from django.http import HttpResponseRedirect
 #from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
 from django.contrib import messages
+from django.db.models import Q
+from django.core.paginator import Paginator
+
 
 # Static pages
 def home(request):
@@ -122,16 +125,40 @@ def community_feedback(request, token):
     return render(request, 'community_feedback.html')
 
 # IT staff dashboard and management
+@login_required
 @user_passes_test(lambda u: u.is_authenticated and u.role == 'it_staff')
 def it_dashboard(request):
     users = CustomUser.objects.all().order_by('-created_at')
-    return render(request, 'dashboard/it_dashboard.html', {'users': users})
+
+    # Count users by role
+    active_users_count = users.filter(is_active=True).count()
+    inactive_users_count = users.filter(is_active=False).count()
+    student_count = users.filter(role='student').count()
+    faculty_count = users.filter(role='faculty').count()
+    ceso_count = users.filter(role='ceso_staff').count()
+    it_count = users.filter(role='it_staff').count()
+
+    return render(request, 'dashboard/it_dashboard.html', {
+        'active_users_count': active_users_count,
+        'inactive_users_count': inactive_users_count,
+        'student_count': student_count,
+        'faculty_count': faculty_count,
+        'ceso_count': ceso_count,
+        'it_count': it_count,
+        'users': users,
+    })
 
 @user_passes_test(lambda u: u.is_authenticated and u.role == 'it_staff')
 def toggle_user_status(request, user_id):
     user = get_object_or_404(CustomUser, id=user_id)
     user.is_active = not user.is_active
     user.save()
+     # Log the toggle
+    ActivityLog.objects.create(
+        actor=request.user,
+        action=f"Toggled user status for {user.username} to {'Active' if user.is_active else 'Inactive'}",
+        affected_user=user
+    )
     messages.success(request, f"{user.username}'s status updated to {'Active' if user.is_active else 'Inactive'}")
     return redirect('it_dashboard')
 
@@ -168,8 +195,77 @@ def add_user(request):
                 course=course,
                 is_active=(status == 'active'),
             )
+            # Log the creation
+            ActivityLog.objects.create(
+                actor=request.user,
+                action=f"Created user {user.username} ({user.role})",
+                affected_user=user
+            )
+
             messages.success(request, 'User account created successfully!')
 
         return redirect('it_dashboard')
 
     return render(request, 'add_user.html')
+
+
+#for edit_user
+
+@user_passes_test(lambda u: u.is_authenticated and u.role == 'it_staff')
+def edit_user(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+
+    if request.method == 'POST':
+        user.username = request.POST.get('username')
+        user.email = request.POST.get('email')
+        user.role = request.POST.get('role')
+        user.status = request.POST.get('status')
+        user.id_number = request.POST.get('id_number')
+        user.first_name = request.POST.get('first_name')
+        user.middle_name = request.POST.get('middle_name')
+        user.last_name = request.POST.get('last_name')
+        user.department = request.POST.get('department')
+        user.section = request.POST.get('section')
+        user.course = request.POST.get('course')
+        user.is_active = (user.status == 'active')
+
+        user.save()
+        
+        ActivityLog.objects.create(
+            actor=request.user,
+            action=f"Edited user {user.username}",
+            affected_user=user
+        )
+        messages.success(request, 'User updated successfully!')
+        return redirect('manage_users')
+
+    return render(request, 'edit_user.html', {'user': user})
+
+#for logs
+@user_passes_test(lambda u: u.is_authenticated and u.role == 'it_staff')
+def view_logs(request):
+    logs = ActivityLog.objects.all().order_by('-timestamp')
+    return render(request, 'dashboard/it_logs.html', {'logs': logs})
+
+def manage_users(request):
+    search = request.GET.get('search', '')
+    role = request.GET.get('role', '')
+    status = request.GET.get('status', '')
+
+    users = CustomUser.objects.all()
+
+    if search:
+        users = users.filter(username__icontains=search)
+    if role:
+        users = users.filter(role=role)
+    if status:
+        users = users.filter(status=status)
+
+    paginator = Paginator(users, 10)  # 10 users per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'dashboard/manage_users.html', {
+        'users': page_obj,
+        'page_obj': page_obj
+    })

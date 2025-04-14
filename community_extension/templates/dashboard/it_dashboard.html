@@ -1,81 +1,123 @@
-{% extends 'dashboard/dashboard_base.html' %}
+{% extends "dashboard/dashboard_base.html" %}
 {% load static %}
-
-{% block title %}IT Dashboard{% endblock %}
-
 {% block content %}
 <div class="flex justify-between items-center mb-6">
     <h1 class="text-3xl font-semibold">Welcome, {{ user.username }}</h1>
     <form action="{% url 'logout' %}" method="post">
         {% csrf_token %}
-        <button type="submit" class="block text-white bg-gray-800 hover:bg-black px-4 py-2 rounded w-full text-left">
+        <button type="submit" class="text-white bg-gray-800 hover:bg-black px-4 py-2 rounded">
             Logout
         </button>
     </form>
 </div>
-<h1 class="text-3xl font-semibold mb-6">IT Staff Dashboard</h1>
 
-<!-- User List -->
-<h2 class="text-xl font-bold mb-4">All Users</h2>
-<table class="min-w-full bg-white rounded-xl shadow-md mb-10">
-    <thead class="bg-gray-100">
-        <tr>
-            <th class="text-left px-4 py-2">Username</th>
-            <th class="text-left px-4 py-2">Full Name</th>
-            <th class="text-left px-4 py-2">Role</th>
-            <th class="text-left px-4 py-2">Department</th>
-            <th class="text-left px-4 py-2">Status</th>
-            <th class="text-left px-4 py-2">Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for user in users %}
-        <tr class="border-t">
-            <td class="px-4 py-2">{{ user.username }}</td>
-            <td class="px-4 py-2">{{ user.first_name }} {{ user.last_name }}</td>
-            <td class="px-4 py-2 capitalize">{{ user.role }}</td>
-            <td class="px-4 py-2">{{ user.department }}</td>
-            <td class="px-4 py-2">
-                {% if user.is_active %}
-                    <span class="text-green-600 font-semibold">Active</span>
-                {% else %}
-                    <span class="text-red-600 font-semibold">Inactive</span>
-                {% endif %}
-            </td>
-            <td class="px-4 py-2">
-                <form method="post" action="{% url 'toggle_user_status' user.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="px-3 py-1 text-sm rounded bg-blue-600 text-white hover:bg-blue-800">
-                        {% if user.is_active %}Deactivate{% else %}Activate{% endif %}
-                    </button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="container mt-5">
+    <h2 class="text-2xl font-bold mb-6">IT Staff Dashboard</h2>
 
-<!-- Add User Form -->
-<h2 class="text-xl font-bold mb-4">Add New User</h2>
-<form method="post" action="{% url 'add_user' %}" class="bg-white p-6 rounded-xl shadow-md space-y-4">
-    {% csrf_token %}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input name="username" type="text" placeholder="Username" class="p-2 border rounded w-full" required>
-        <input name="password" type="password" placeholder="Password" class="p-2 border rounded w-full" required>
-        <input name="first_name" type="text" placeholder="First Name" class="p-2 border rounded w-full" required>
-        <input name="middle_name" type="text" placeholder="Middle Name" class="p-2 border rounded w-full">
-        <input name="last_name" type="text" placeholder="Last Name" class="p-2 border rounded w-full" required>
-        <input name="id_number" type="text" placeholder="ID Number" class="p-2 border rounded w-full" required>
-        <input name="department" type="text" placeholder="Department" class="p-2 border rounded w-full">
-        <input name="section" type="text" placeholder="Section" class="p-2 border rounded w-full">
-        <input name="course" type="text" placeholder="Course (if student)" class="p-2 border rounded w-full">
-        <select name="role" class="p-2 border rounded w-full">
-            <option value="student">Student</option>
-            <option value="faculty">Faculty</option>
-            <option value="admin">CESO Staff</option>
-            <option value="it_staff">IT Staff</option>
-        </select>
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
+        <div class="bg-green-500 text-white p-6 rounded-lg shadow-lg">
+            <h5 class="text-xl font-semibold">Active Users</h5>
+            <p class="text-2xl">{{ active_users_count }}</p>
+        </div>
+        <div class="bg-red-500 text-white p-6 rounded-lg shadow-lg">
+            <h5 class="text-xl font-semibold">Inactive Users</h5>
+            <p class="text-2xl">{{ inactive_users_count }}</p>
+        </div>
+        <div class="bg-blue-500 text-white p-6 rounded-lg shadow-lg">
+            <h5 class="text-xl font-semibold">Students</h5>
+            <p class="text-2xl">{{ student_count }}</p>
+        </div>
+        <div class="bg-purple-500 text-white p-6 rounded-lg shadow-lg">
+            <h5 class="text-xl font-semibold">Faculty</h5>
+            <p class="text-2xl">{{ faculty_count }}</p>
+        </div>
+        <div class="bg-yellow-500 text-white p-6 rounded-lg shadow-lg">
+            <h5 class="text-xl font-semibold">CESO Staff</h5>
+            <p class="text-2xl">{{ ceso_count }}</p>
+        </div>
+        <div class="bg-gray-600 text-white p-6 rounded-lg shadow-lg">
+            <h5 class="text-xl font-semibold">IT Staff</h5>
+            <p class="text-2xl">{{ it_count }}</p>
+        </div>
     </div>
-    <button type="submit" class="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-800">Create User</button>
-</form>
+
+    <!-- Manage Users Button -->
+    <div class="mt-8">
+        <a href="{% url 'manage_users' %}" class="text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg">
+            Manage Users
+        </a>
+    </div>
+
+    <!-- User List with Status -->
+    <h3 class="text-xl font-semibold mt-8 mb-4">User List</h3>
+    <div class="overflow-x-auto">
+        <div class="flex justify-end mb-4">
+            <input id="searchInput" type="text" placeholder="Search users..." 
+                   class="border border-gray-300 rounded px-4 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <table id="userTable" class="min-w-full bg-white text-center border border-gray-300 rounded-lg shadow">
+            <thead class="bg-gray-200 text-gray-700">
+                <tr>
+                    <th class="px-4 py-2 border border-gray-300 cursor-pointer" onclick="sortTable(0)">#</th>
+                    <th class="px-4 py-2 border border-gray-300 cursor-pointer" onclick="sortTable(1)">Username</th>
+                    <th class="px-4 py-2 border border-gray-300 cursor-pointer" onclick="sortTable(2)">Role</th>
+                    <th class="px-4 py-2 border border-gray-300 cursor-pointer" onclick="sortTable(3)">Status</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody">
+                {% for u in users %}
+                <tr class="hover:bg-gray-100">
+                    <td class="px-4 py-2 border border-gray-300">{{ forloop.counter }}</td>
+                    <td class="px-4 py-2 border border-gray-300">{{ u.username }}</td>
+                    <td class="px-4 py-2 border border-gray-300">{{ u.role|title }}</td>
+                    <td class="px-4 py-2 border border-gray-300">
+                        {% if u.is_active %}
+                            <span class="text-green-600 font-semibold">Active</span>
+                        {% else %}
+                            <span class="text-red-600 font-semibold">Inactive</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="px-4 py-4 border border-gray-300 text-gray-500">No users found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Total User Count -->
+        <div class="mt-4 text-center text-gray-700 font-medium">
+            Total Users: {{ users|length }}
+        </div>
+    </div>
+</div>
+<script>
+    // Search filter
+    document.getElementById('searchInput').addEventListener('keyup', function () {
+        let search = this.value.toLowerCase();
+        let rows = document.querySelectorAll('#userTable tbody tr');
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(search) ? '' : 'none';
+        });
+    });
+
+    // Sorting function
+    function sortTable(columnIndex) {
+        const table = document.getElementById('userTable');
+        const rows = Array.from(table.rows).slice(1); // skip header
+        let sortedRows = rows.sort((a, b) => {
+            const aText = a.cells[columnIndex].innerText.trim().toLowerCase();
+            const bText = b.cells[columnIndex].innerText.trim().toLowerCase();
+            return aText.localeCompare(bText);
+        });
+
+        const tbody = table.querySelector('tbody');
+        tbody.innerHTML = '';
+        sortedRows.forEach(row => tbody.appendChild(row));
+    }
+</script>
+
 {% endblock %}

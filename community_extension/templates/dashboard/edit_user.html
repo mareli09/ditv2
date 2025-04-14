@@ -1,0 +1,80 @@
+{% extends "dashboard/dashboard_base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Edit User: {{ user.username }}</h2>
+
+    <form method="POST" class="row g-3">
+        {% csrf_token %}
+        
+        <!-- Account Info -->
+        <div class="col-md-4">
+            <label for="username" class="form-label">Username *</label>
+            <input type="text" name="username" class="form-control" value="{{ user.username }}" required>
+        </div>
+        <div class="col-md-4">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" value="{{ user.email }}">
+        </div>
+
+        <!-- Role and Status -->
+        <div class="col-md-4">
+            <label for="role" class="form-label">Role *</label>
+            <select name="role" class="form-control" required>
+                <option value="student" {% if user.role == 'student' %}selected{% endif %}>Student</option>
+                <option value="faculty" {% if user.role == 'faculty' %}selected{% endif %}>Faculty</option>
+                <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>CESO Staff</option>
+                <option value="it_staff" {% if user.role == 'it_staff' %}selected{% endif %}>IT Staff</option>
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label for="status" class="form-label">Status *</label>
+            <select name="status" class="form-control" required>
+                <option value="active" {% if user.status == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if user.status == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label for="id_number" class="form-label">ID Number</label>
+            <input type="text" name="id_number" class="form-control" value="{{ user.id_number }}">
+        </div>
+
+        <!-- Name Info -->
+        <div class="col-md-4">
+            <label for="first_name" class="form-label">First Name *</label>
+            <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}" required>
+        </div>
+        <div class="col-md-4">
+            <label for="middle_name" class="form-label">Middle Name</label>
+            <input type="text" name="middle_name" class="form-control" value="{{ user.middle_name }}">
+        </div>
+        <div class="col-md-4">
+            <label for="last_name" class="form-label">Last Name *</label>
+            <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}" required>
+        </div>
+
+        <!-- Academic Info -->
+        <div class="col-md-4">
+            <label for="department" class="form-label">Department</label>
+            <input type="text" name="department" class="form-control" value="{{ user.department }}">
+        </div>
+        <div class="col-md-4">
+            <label for="section" class="form-label">Section</label>
+            <input type="text" name="section" class="form-control" value="{{ user.section }}">
+        </div>
+        <div class="col-md-4">
+            <label for="course" class="form-label">Course</label>
+            <input type="text" name="course" class="form-control" value="{{ user.course }}">
+        </div>
+
+        <!-- Submit -->
+        <div class="col-12 mt-4">
+            <button type="submit" class="btn btn-success">Update</button>
+            <a href="{% url 'manage_users' %}" class="btn btn-secondary">Back</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

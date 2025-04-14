@@ -2,7 +2,6 @@ from django.urls import path
 from . import views
 from django.contrib.auth.views import LogoutView
 
-
 urlpatterns = [
     path('', views.home, name='home'),
     path('login/', views.login_view, name='login'),
@@ -32,13 +31,11 @@ urlpatterns = [
     #logoutview
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
     
-    #itstaff
+    # IT Staff
     path('dashboard/it/', views.it_dashboard, name='it_dashboard'),
-
-    #urlpatterns
-    # IT staff management
-    path('dashboard/it/toggle-status/<int:user_id>/', views.toggle_user_status, name='toggle_user_status'),
+    path('dashboard/it/manage-users/', views.manage_users, name='manage_users'),
     path('dashboard/it/add-user/', views.add_user, name='add_user'),
-
-    
+    path('dashboard/it/edit-user/<int:user_id>/', views.edit_user, name='edit_user'),
+    path('dashboard/it/logs/', views.view_logs, name='view_logs'),
+    path('dashboard/it/toggle-status/<int:user_id>/', views.toggle_user_status, name='toggle_user_status'),
 ]
