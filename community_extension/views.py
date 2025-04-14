@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import logout
 from django.urls import reverse
 from django.contrib import messages
-from .models import CustomUser
+from .models import CustomUser, ActivityLog
 from django.http import HttpResponseRedirect
 #from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
@@ -151,16 +151,29 @@ def it_dashboard(request):
 @user_passes_test(lambda u: u.is_authenticated and u.role == 'it_staff')
 def toggle_user_status(request, user_id):
     user = get_object_or_404(CustomUser, id=user_id)
+
+    # Toggle both `is_active` and custom `status` field if applicable
     user.is_active = not user.is_active
+    user.status = "active" if user.is_active else "inactive"
     user.save()
-     # Log the toggle
+
+    # Log the status toggle
     ActivityLog.objects.create(
         actor=request.user,
         action=f"Toggled user status for {user.username} to {'Active' if user.is_active else 'Inactive'}",
         affected_user=user
     )
+
+    # Show success message
     messages.success(request, f"{user.username}'s status updated to {'Active' if user.is_active else 'Inactive'}")
-    return redirect('it_dashboard')
+
+    # Preserve query parameters when redirecting back
+    query_params = request.GET.dict()
+    redirect_url = reverse('manage_users')
+    if query_params:
+        redirect_url += '?' + urlencode(query_params)
+
+    return redirect(redirect_url)
 
 def add_user(request):
     if request.method == 'POST':
@@ -204,9 +217,9 @@ def add_user(request):
 
             messages.success(request, 'User account created successfully!')
 
-        return redirect('it_dashboard')
+        return redirect('manage_users')
 
-    return render(request, 'add_user.html')
+    return render(request, 'dashboard/add_user.html')
 
 
 #for edit_user
@@ -261,9 +274,10 @@ def manage_users(request):
     if status:
         users = users.filter(status=status)
 
-    paginator = Paginator(users, 10)  # 10 users per page
+    paginator = Paginator(users,5)  # 10 users per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+    users = users.order_by('-created_at')
 
     return render(request, 'dashboard/manage_users.html', {
         'users': page_obj,
