@@ -128,3 +128,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'community_extension.CustomUser'
 
 CSRF_COOKIE_SECURE = False 
+
+# Media files (uploads)
+MEDIA_URL = '/activity_attachments/'
+MEDIA_ROOT = os.path.join(BASE_DIR, '')
+
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
+TIME_ZONE = 'Asia/Hong_Kong'
+USE_TZ = True  # Ensure this is set to True to enable time zone support

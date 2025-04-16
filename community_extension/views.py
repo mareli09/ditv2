@@ -4,21 +4,19 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import logout
 from django.urls import reverse
 from django.contrib import messages
-from .models import CustomUser, ActivityLog
-from django.http import HttpResponseRedirect,HttpResponse
-#from django.contrib.auth.models import User
-from django.shortcuts import redirect, render
-from django.contrib import messages
+from .models import CustomUser, ActivityLog, Activity
+from django.http import HttpResponseRedirect, HttpResponse
 from django.db.models import Q
 from django.core.paginator import Paginator
 import csv
-
+from .forms import CreateActivityForm
+from urllib.parse import urlencode
 
 # Static pages
 def home(request):
     return render(request, 'landing_page.html')
 
-#login
+# Login view
 def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -54,7 +52,7 @@ def about(request):
 def contact(request):
     return render(request, 'contact.html')
 
-#logout
+# Logout view
 def logout_view(request):
     logout(request)
     return redirect('login')
@@ -90,6 +88,7 @@ def certifications(request):
 def sentiment_report(request):
     return render(request, 'sentiment_report.html')
 
+# Create activity view for admins
 @user_passes_test(lambda u: u.is_authenticated and u.role == 'admin')
 def create_activity(request):
     return render(request, 'create_activity.html')
@@ -108,7 +107,34 @@ def cesostaff_dashboard(request):
 
 @login_required
 def activities(request):
-    return render(request, 'activities/list.html')
+    # Get all activities
+    activities = Activity.objects.all()
+
+    # Implement search filter if query exists
+    search_query = request.GET.get('search', '')
+    if search_query:
+        activities = activities.filter(
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(venue__icontains=search_query) |
+            Q(conducted_by__icontains=search_query) |
+            Q(fees_expenses__icontains=search_query) |
+            Q(tags__icontains=search_query)
+        )
+
+    # Paginate results (10 per page)
+    paginator = Paginator(activities, 10)  # 10 activities per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Get the latest added activity (optional)
+    latest_activity = Activity.objects.latest('created_at')
+
+    return render(request, 'activities/list.html', {
+        'page_obj': page_obj,
+        'latest_activity': latest_activity,
+        'search_query': search_query,  # Pass the search query to template
+    })
 
 @login_required
 def view_activity(request, activity_id):
@@ -222,8 +248,7 @@ def add_user(request):
     return render(request, 'dashboard/add_user.html')
 
 
-#for edit_user
-
+# Edit user view for IT staff
 @user_passes_test(lambda u: u.is_authenticated and u.role == 'it_staff')
 def edit_user(request, user_id):
     user = get_object_or_404(CustomUser, id=user_id)
@@ -243,7 +268,7 @@ def edit_user(request, user_id):
         user.is_active = (user.status == 'active')
 
         user.save()
-        
+
         ActivityLog.objects.create(
             actor=request.user,
             action=f"Edited user {user.username}",
@@ -254,12 +279,13 @@ def edit_user(request, user_id):
 
     return render(request, 'edit_user.html', {'user': user})
 
-#for logs
+# Logs view for IT staff
 @user_passes_test(lambda u: u.is_authenticated and u.role == 'it_staff')
 def view_logs(request):
     logs = ActivityLog.objects.all().order_by('-timestamp')
     return render(request, 'dashboard/it_logs.html', {'logs': logs})
 
+# Manage users view
 def manage_users(request):
     search = request.GET.get('search', '')
     role = request.GET.get('role', '')
@@ -273,11 +299,10 @@ def manage_users(request):
         users = users.filter(role=role)
     if status:
         users = users.filter(status=status)
-        
+
     total_users = CustomUser.objects.count()  # All users
 
-
-    paginator = Paginator(users,5)  # 10 users per page
+    paginator = Paginator(users, 5)  # 10 users per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     users = users.order_by('-created_at')
@@ -285,13 +310,11 @@ def manage_users(request):
     return render(request, 'dashboard/manage_users.html', {
         'users': page_obj,
         'page_obj': page_obj,
-        'total_users': total_users, 
+        'total_users': total_users,
     })    
 
-#for csv
-    
+# For CSV download
 @user_passes_test(lambda u: u.is_authenticated and u.role == 'it_staff')
-    
 def download_users_csv(request):
     users = CustomUser.objects.all().order_by('-created_at')
 
@@ -315,3 +338,48 @@ def download_users_csv(request):
         ])
 
     return response
+
+
+# Create Activity view
+@login_required
+def create_activity(request):
+    if request.method == 'POST':
+        form = CreateActivityForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('activities')  # Replace with your manage activity URL name
+    else:
+        form = CreateActivityForm()
+    return render(request, 'dashboard/create_activity.html', {'form': form})
+
+
+@login_required
+def update_activity(request, id=None):
+    # If the activity ID is provided, try to fetch it. If not, create a new one.
+    if id:
+        activity = get_object_or_404(Activity, id=id)
+        form = CreateActivityForm(request.POST or None, request.FILES or None, instance=activity)
+        action = 'Update'
+    else:
+        activity = None
+        form = CreateActivityForm(request.POST or None, request.FILES or None)
+        action = 'Create'
+    
+    # Process the form when it's submitted via POST
+    if request.method == 'POST':
+        if form.is_valid():
+            form.save()  # Save the activity (new or updated)
+            if action == 'Update':
+                messages.success(request, "Activity updated successfully!")
+            else:
+                messages.success(request, "Activity created successfully!")
+            return redirect('activities')  # Redirect to the activity list or another page
+        else:
+            messages.error(request, "There was an error with your form. Please check the details.")
+
+    # If it's a GET request, just show the form
+    return render(request, 'activities/update_activity.html', {
+        'form': form,
+        'activity': activity,
+        'action': action
+    })

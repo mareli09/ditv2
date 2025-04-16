@@ -1,0 +1,113 @@
+{% extends 'dashboard/ceso_base.html' %}
+
+{% block title %}Activities List{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-semibold mb-6">Activities List</h1>
+
+    <!-- Search Filter -->
+    <div class="mb-6">
+        <form method="get" action="">
+            <input type="text" name="search" value="{{ search_query }}" class="p-2 border rounded-md" placeholder="Search Activities..." />
+            <button type="submit" class="bg-blue-500 text-white p-2 rounded-md">Search</button>
+        </form>
+    </div>
+
+    <!-- Table -->
+    <table class="min-w-full table-auto bg-white border border-gray-200 rounded-lg shadow-md">
+        <thead>
+            <tr class="text-left bg-gray-100 text-sm font-medium text-gray-700">
+                <th class="px-4 py-3">#</th>
+                <th class="px-4 py-3">
+                    <a href="?{% if search_query %}search={{ search_query }}&{% endif %}sort=title&direction={% if request.GET.direction == 'asc' %}desc{% else %}asc{% endif %}">
+                        Title
+                    </a>
+                </th>
+                <th class="px-4 py-3">
+                    <a href="?{% if search_query %}search={{ search_query }}&{% endif %}sort=description&direction={% if request.GET.direction == 'asc' %}desc{% else %}asc{% endif %}">
+                        Description
+                    </a>
+                </th>
+                <th class="px-4 py-3">
+                    <a href="?{% if search_query %}search={{ search_query }}&{% endif %}sort=start_date&direction={% if request.GET.direction == 'asc' %}desc{% else %}asc{% endif %}">
+                        Start Date
+                    </a>
+                </th>
+                <th class="px-4 py-3">
+                    <a href="?{% if search_query %}search={{ search_query }}&{% endif %}sort=end_date&direction={% if request.GET.direction == 'asc' %}desc{% else %}asc{% endif %}">
+                        End Date
+                    </a>
+                </th>
+                <th class="px-4 py-3">Time</th>
+                <th class="px-4 py-3">Venue</th>
+                <th class="px-4 py-3">Conducted By</th>
+                <th class="px-4 py-3">Fees/Expenses</th>
+                <th class="px-4 py-3">Tags</th>
+                <th class="px-4 py-3">Attachment</th>
+                <th class="px-4 py-3">
+                    <a href="?{% if search_query %}search={{ search_query }}&{% endif %}sort=created_at&direction={% if request.GET.direction == 'asc' %}desc{% else %}asc{% endif %}">
+                        Date Submitted
+                    </a>
+                </th>
+                <th class="px-4 py-3">Edited Date</th>
+                <th class="px-4 py-3">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="text-sm text-gray-600">
+            {% for activity in page_obj %}
+                <tr class="border-t">
+                    <td class="px-4 py-3">{{ forloop.counter }}</td>
+                    <td class="px-4 py-3">{{ activity.title }}</td>
+                    <td class="px-4 py-3">{{ activity.description }}</td>
+                    <td class="px-4 py-3">{{ activity.start_date }}</td>
+                    <td class="px-4 py-3">{{ activity.end_date }}</td>
+                    <td class="px-4 py-3">{{ activity.time|default:"N/A" }}</td>
+                    <td class="px-4 py-3">{{ activity.venue|default:"N/A" }}</td>
+                    <td class="px-4 py-3">{{ activity.conducted_by|default:"N/A" }}</td>
+                    <td class="px-4 py-3">{{ activity.fees_expenses|default:"N/A" }}</td>
+                    <td class="px-4 py-3">{{ activity.tags|default:"N/A" }}</td>
+                    <td class="px-4 py-3">
+                        {% if activity.attachment %}
+                            <a href="{{ activity.attachment.url }}" class="text-blue-500 hover:underline" target="_blank">View Attachment</a>
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3">{{ activity.created_at|date:"Y-m-d H:i" }}</td>
+                    <td class="px-4 py-3">{{ activity.modified_at|date:"Y-m-d H:i" }}</td>
+                    <td class="px-4 py-3">
+                        <a href="{% url 'update_activity' activity.id %}" class="text-blue-500 hover:underline">Edit</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="13" class="px-4 py-3 text-center text-gray-500">No activities available.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Total Count of Activities -->
+    <div class="mt-4 text-lg font-semibold">
+        Total Activities: {{ total_activities }}
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-6 flex justify-between items-center">
+        <div>
+            <span class="text-sm text-gray-700">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        </div>
+        <div class="flex space-x-2">
+            {% if page_obj.has_previous %}
+                <a href="?page=1&search={{ search_query }}&sort={{ sort_field }}&direction={{ direction }}" class="px-4 py-2 bg-gray-300 text-sm rounded-md">First</a>
+                <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&sort={{ sort_field }}&direction={{ direction }}" class="px-4 py-2 bg-gray-300 text-sm rounded-md">Previous</a>
+            {% endif %}
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&sort={{ sort_field }}&direction={{ direction }}" class="px-4 py-2 bg-gray-300 text-sm rounded-md">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}&search={{ search_query }}&sort={{ sort_field }}&direction={{ direction }}" class="px-4 py-2 bg-gray-300 text-sm rounded-md">Last</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

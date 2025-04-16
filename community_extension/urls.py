@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 from django.contrib.auth.views import LogoutView
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -16,9 +18,10 @@ urlpatterns = [
 
     # Activities
     path('activities/', views.activities, name='activities'),
-    path('activities/create/', views.create_activity, name='create_activity'),
+    path('activities/create/', views.update_activity, name='create_activity'),  # Create activity
     path('activities/<int:activity_id>/', views.view_activity, name='view_activity'),
-
+    #for edit
+    path('activities/<int:id>/edit/', views.update_activity, name='update_activity'),
     # Feedback
     path('feedback/submit/', views.submit_feedback, name='submit_feedback'),
 
@@ -41,5 +44,12 @@ urlpatterns = [
     
     #for csv
     path('download-csv/', views.download_users_csv, name='download_users_csv'),
+    
+    #ceso create activity 
+    path('create-activity/', views.create_activity, name='create_activity')
 
 ]
+
+# Add this to serve media files during development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

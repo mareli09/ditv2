@@ -1,0 +1,84 @@
+{% extends 'dashboard/ceso_base.html' %}
+
+{% block title %}{{ action }} Activity{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6 bg-white rounded-lg shadow-md">
+    <h1 class="text-3xl font-semibold mb-6">{{ action }} Activity</h1>
+
+    <!-- Display messages -->
+    {% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} p-4 mb-4">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <!-- Title -->
+        <div class="mb-4">
+            <label for="title" class="block text-sm font-medium text-gray-700">Title</label>
+            {{ form.title }}
+        </div>
+
+        <!-- Description -->
+        <div class="mb-4">
+            <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+            {{ form.description }}
+        </div>
+
+        <!-- Start Date -->
+        <div class="mb-4">
+            <label for="start_date" class="block text-sm font-medium text-gray-700">Start Date</label>
+            {{ form.start_date }}
+        </div>
+
+        <!-- End Date -->
+        <div class="mb-4">
+            <label for="end_date" class="block text-sm font-medium text-gray-700">End Date</label>
+            {{ form.end_date }}
+        </div>
+
+        <!-- Time -->
+        <div class="mb-4">
+            <label for="time" class="block text-sm font-medium text-gray-700">Time</label>
+            {{ form.time }}
+        </div>
+
+        <!-- Venue -->
+        <div class="mb-4">
+            <label for="venue" class="block text-sm font-medium text-gray-700">Venue</label>
+            {{ form.venue }}
+        </div>
+
+        <!-- Conducted By -->
+        <div class="mb-4">
+            <label for="conducted_by" class="block text-sm font-medium text-gray-700">Conducted By</label>
+            {{ form.conducted_by }}
+        </div>
+
+        <!-- Fees/Expenses -->
+        <div class="mb-4">
+            <label for="fees_expenses" class="block text-sm font-medium text-gray-700">Fees/Expenses</label>
+            {{ form.fees_expenses }}
+        </div>
+
+        <!-- Attachment -->
+        <div class="mb-4">
+            <label for="attachment" class="block text-sm font-medium text-gray-700">Attachment</label>
+            {{ form.attachment }}
+        </div>
+
+        <!-- Submit Button -->
+        <div class="mb-4 flex justify-center space-x-4">
+            <button type="submit" class="w-full py-2 bg-indigo-600 text-white rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">{{ action }} Activity</button>
+            <a href="{% url 'activities' %}" class="w-full py-2 bg-gray-300 text-gray-800 rounded-md shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 text-center">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
