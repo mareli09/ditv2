@@ -1,0 +1,23 @@
+{% extends "dashboard/ceso_base.html" %}
+{% block content %}
+<div class="max-w-3xl mx-auto mt-10 bg-white p-6 rounded-2xl shadow-md">
+  <h2 class="text-3xl font-bold mb-4">{{ activity.title }}</h2>
+  <p class="mb-2 text-gray-700">{{ activity.description }}</p>
+  <p><strong>Date:</strong> {{ activity.start_date }}</p>
+  <p><strong>Venue:</strong> {{ activity.venue }}</p>
+
+  <div class="mt-6">
+    <a href="{% url 'guest_feedback' activity.id %}" class="inline-block bg-green-500 text-white px-4 py-2 rounded-xl hover:bg-green-600">
+      Leave Feedback
+    </a>
+  </div>
+
+  {% if sentiment_summary %}
+  <div class="mt-8 bg-gray-50 p-4 rounded-xl">
+    <h3 class="text-xl font-semibold mb-2">Feedback Summary</h3>
+    <p><strong>Average Rating:</strong> {{ avg_rating }}/5</p>
+    <p><strong>Sentiment:</strong> {{ sentiment_summary }}</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

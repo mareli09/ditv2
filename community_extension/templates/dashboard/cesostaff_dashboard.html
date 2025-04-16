@@ -1,9 +1,10 @@
 {% extends 'dashboard/ceso_base.html' %}
+
 {% block title %}CESO Staff Dashboard{% endblock %}
 
 {% block content %}
 <div class="flex justify-between items-center mb-6">
-<h1 class="text-3xl font-semibold mb-6">Welcome, {{ user.username }}</h1>
+    <h1 class="text-3xl font-semibold mb-6">Welcome, {{ user.username }}</h1>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -20,33 +21,11 @@
         <p>Review and manage all ongoing and past events.</p>
         <a href="{% url 'activities' %}" class="inline-block mt-3 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">View Activities</a>
     </div>
-
-    <!-- Sentiment Analysis -->
-    <div class="bg-white p-6 rounded-xl shadow-md hover:bg-indigo-600 hover:text-white transition">
-        <h2 class="text-xl font-bold mb-2">Sentiment Report</h2>
-        <p>Analyze feedback sentiment from community participants.</p>
-        <a href="#" class="inline-block mt-3 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">View Reports</a>
-    </div>
-
     <!-- Generate Certificates -->
     <div class="bg-white p-6 rounded-xl shadow-md hover:bg-indigo-600 hover:text-white transition">
         <h2 class="text-xl font-bold mb-2">Generate Certificates</h2>
         <p>Issue certificates to participants and volunteers.</p>
         <a href="#" class="inline-block mt-3 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Generate</a>
-    </div>
-
-    <!-- Feedback Management -->
-    <div class="bg-white p-6 rounded-xl shadow-md hover:bg-indigo-600 hover:text-white transition">
-        <h2 class="text-xl font-bold mb-2">Feedback Overview</h2>
-        <p>Read feedback submitted by students and faculty.</p>
-        <a href="#" class="inline-block mt-3 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">View Feedback</a>
-    </div>
-
-    <!-- Community Impact -->
-    <div class="bg-white p-6 rounded-xl shadow-md hover:bg-indigo-600 hover:text-white transition">
-        <h2 class="text-xl font-bold mb-2">Community Impact</h2>
-        <p>View metrics, attendance, and impact of outreach programs.</p>
-        <a href="#" class="inline-block mt-3 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Analyze</a>
     </div>
 </div>
 {% endblock %}

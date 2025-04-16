@@ -4,13 +4,21 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import logout
 from django.urls import reverse
 from django.contrib import messages
-from .models import CustomUser, ActivityLog, Activity
+from .models import CustomUser, ActivityLog, Activity, GuestFeedback
 from django.http import HttpResponseRedirect, HttpResponse
 from django.db.models import Q
 from django.core.paginator import Paginator
 import csv
-from .forms import CreateActivityForm
+from .forms import CreateActivityForm, GuestFeedbackForm
 from urllib.parse import urlencode
+import openai
+import os
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+import io
+
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
 
 # Static pages
 def home(request):
@@ -103,14 +111,15 @@ def faculty_dashboard(request):
 
 @user_passes_test(lambda u: u.is_authenticated and u.role == 'ceso_staff')
 def cesostaff_dashboard(request):
-    return render(request, 'dashboard/cesostaff_dashboard.html')
+    activities = Activity.objects.all()  # or filter as needed
+    return render(request, 'dashboard/cesostaff_dashboard.html', {'activities': activities})
 
 @login_required
 def activities(request):
     # Get all activities
     activities = Activity.objects.all()
 
-    # Implement search filter if query exists
+    # Search filter
     search_query = request.GET.get('search', '')
     if search_query:
         activities = activities.filter(
@@ -122,20 +131,34 @@ def activities(request):
             Q(tags__icontains=search_query)
         )
 
-    # Paginate results (10 per page)
-    paginator = Paginator(activities, 10)  # 10 activities per page
+    # Sorting
+    sort_field = request.GET.get('sort', 'created_at')
+    direction = request.GET.get('direction', 'desc')
+    if direction == 'asc':
+        activities = activities.order_by(sort_field)
+    else:
+        activities = activities.order_by(f'-{sort_field}')
+
+    # Total filtered activity count
+    total_activities = activities.count()
+
+    # Pagination
+    paginator = Paginator(activities, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # Get the latest added activity (optional)
-    latest_activity = Activity.objects.latest('created_at')
+    # Latest activity (optional)
+    latest_activity = Activity.objects.order_by('-created_at').first()
 
     return render(request, 'activities/list.html', {
         'page_obj': page_obj,
         'latest_activity': latest_activity,
-        'search_query': search_query,  # Pass the search query to template
+        'search_query': search_query,
+        'sort_field': sort_field,
+        'direction': direction,
+        'total_activities': total_activities,
     })
-
+    
 @login_required
 def view_activity(request, activity_id):
     return render(request, 'activities/view.html')
@@ -383,3 +406,89 @@ def update_activity(request, id=None):
         'activity': activity,
         'action': action
     })
+    
+
+def analyze_sentiment(comment):
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "Analyze the sentiment of the following comment."},
+            {"role": "user", "content": comment},
+        ]
+    )
+    sentiment = response['choices'][0]['message']['content'].strip()
+    return sentiment
+
+def submit_guest_feedback(request, activity_id):
+    activity = get_object_or_404(Activity, id=activity_id)
+    if request.method == 'POST':
+        form = GuestFeedbackForm(request.POST)
+        if form.is_valid():
+            feedback = form.save(commit=False)
+            feedback.activity = activity
+            feedback.sentiment = analyze_sentiment(feedback.comment)
+            feedback.save()
+            return redirect('thank_you_guest')
+    else:
+        form = GuestFeedbackForm()
+    return render(request, 'guest_feedback_form.html', {'form': form, 'activity': activity})
+
+
+
+def generate_certificate(participant_name, activity):
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    p.setFont("Helvetica-Bold", 20)
+    p.drawCentredString(300, 750, "Certificate of Participation")
+    
+    p.setFont("Helvetica", 14)
+    p.drawCentredString(300, 700, f"This is to certify that")
+    p.setFont("Helvetica-Bold", 16)
+    p.drawCentredString(300, 670, participant_name)
+    p.setFont("Helvetica", 14)
+    p.drawCentredString(300, 640, f"has participated in")
+    p.setFont("Helvetica-Bold", 16)
+    p.drawCentredString(300, 610, f"'{activity.title}'")
+    p.drawCentredString(300, 580, f"held at {activity.venue} on {activity.start_date}")
+
+    p.setFont("Helvetica", 12)
+    p.drawString(400, 500, f"- {activity.created_by.get_full_name()}")
+
+    p.showPage()
+    p.save()
+
+    buffer.seek(0)
+    return buffer
+
+
+#activity detail
+
+def activity_detail(request, activity_id):
+    activity = Activity.objects.get(id=activity_id)  # Adjust to your model
+    sentiment_summary = get_sentiment_summary(activity)  # This could be a function that processes feedback and returns a sentiment summary
+    avg_rating = calculate_avg_rating(activity)  # Another function for calculating the average rating
+    return render(request, 'activities/activity_detail.html', {
+        'activity': activity,
+        'sentiment_summary': sentiment_summary,
+        'avg_rating': avg_rating,
+    })
+    
+def feedback_overview(request):
+    sentiment_reports = get_feedback_reports()  # This function gathers feedback and sentiment data
+    return render(request, 'dashboard/feedback_overview.html', {
+        'sentiment_reports': sentiment_reports,
+    })
+    
+def feedback_report(request, activity_id):
+    activity = get_object_or_404(Activity, id=activity_id)
+    feedbacks = Feedback.objects.filter(activity=activity)
+    
+    # Optional: Sentiment analysis summary
+    summary = generate_sentiment_summary(feedbacks)
+
+    context = {
+        'activity': activity,
+        'feedbacks': feedbacks,
+        'summary': summary,
+    }
+    return render(request, 'dashboard/feedback_report.html', context)

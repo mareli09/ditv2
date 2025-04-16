@@ -1,0 +1,26 @@
+{% extends "dashboard/ceso_base.html" %}
+{% block content %}
+<div class="p-6 max-w-4xl mx-auto">
+  <h2 class="text-2xl font-bold mb-4">Feedback & Sentiment Reports</h2>
+
+  <form method="get" class="mb-6 flex items-center gap-2">
+    <select name="activity_id" class="p-2 rounded-xl border border-gray-300">
+      <option value="">All Activities</option>
+      {% for activity in activities %}
+      <option value="{{ activity.id }}" {% if request.GET.activity_id == activity.id|stringformat:"s" %}selected{% endif %}>
+        {{ activity.title }}
+      </option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-xl hover:bg-blue-600">Filter</button>
+  </form>
+
+  {% for feedback in feedbacks %}
+  <div class="mb-4 p-4 bg-white rounded-xl shadow">
+    <h4 class="font-semibold text-lg">{{ feedback.activity.title }}</h4>
+    <p><strong>Avg Rating:</strong> {{ feedback.avg_rating }}</p>
+    <p><strong>Sentiment Summary:</strong> {{ feedback.sentiment }}</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

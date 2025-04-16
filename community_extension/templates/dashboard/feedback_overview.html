@@ -1,0 +1,16 @@
+{% extends "dashboard/ceso_base.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto mt-10 p-6">
+  <h2 class="text-2xl font-bold mb-6">Feedback Overview</h2>
+  <div class="grid gap-4">
+    {% for report in sentiment_reports %}
+    <div class="bg-white p-4 shadow-md rounded-xl">
+      <h4 class="text-lg font-semibold">{{ report.activity.title }}</h4>
+      <p><strong>Total Feedbacks:</strong> {{ report.total }}</p>
+      <p><strong>Average Rating:</strong> {{ report.avg_rating }}</p>
+      <p><strong>Sentiment Summary:</strong> {{ report.sentiment }}</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

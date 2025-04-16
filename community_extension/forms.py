@@ -1,5 +1,5 @@
 from django import forms
-from .models import Activity
+from .models import Activity, GuestFeedback
 
 class CreateActivityForm(forms.ModelForm):
     class Meta:
@@ -40,3 +40,8 @@ class UpdateActivityForm(forms.ModelForm):
             'start_date': forms.DateInput(attrs={'type': 'date'}),
             'end_date': forms.DateInput(attrs={'type': 'date'}),
         }
+        
+class GuestFeedbackForm(forms.ModelForm):
+    class Meta:
+        model = GuestFeedback
+        fields = ['name', 'email', 'rating', 'comment']

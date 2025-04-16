@@ -1,0 +1,13 @@
+{% extends "dashboard/ceso_base.html" %}
+{% block content %}
+<div class="max-w-xl mx-auto mt-10 bg-white shadow-md rounded-2xl p-6">
+  <h2 class="text-2xl font-bold mb-4 text-center">Leave Your Feedback</h2>
+  <form method="post" class="space-y-4">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-xl">
+      Submit Feedback
+    </button>
+  </form>
+</div>
+{% endblock %}

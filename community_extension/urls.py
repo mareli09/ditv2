@@ -20,6 +20,8 @@ urlpatterns = [
     path('activities/', views.activities, name='activities'),
     path('activities/create/', views.update_activity, name='create_activity'),  # Create activity
     path('activities/<int:activity_id>/', views.view_activity, name='view_activity'),
+    path('activities/<int:activity_id>/detail/', views.activity_detail, name='activity_detail'), #for activity detail
+
     #for edit
     path('activities/<int:id>/edit/', views.update_activity, name='update_activity'),
     # Feedback
@@ -46,8 +48,11 @@ urlpatterns = [
     path('download-csv/', views.download_users_csv, name='download_users_csv'),
     
     #ceso create activity 
-    path('create-activity/', views.create_activity, name='create_activity')
+    path('create-activity/', views.create_activity, name='create_activity'),
+    
+    path('feedback/overview/', views.feedback_overview, name='feedback_overview'),
 
+    path('feedback/report/', views.feedback_report, name='feedback_report'),
 ]
 
 # Add this to serve media files during development
