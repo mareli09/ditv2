@@ -1,4 +1,4 @@
-{% extends "dashboard/dashboard_base.html" %}
+{% extends "dashboard/it_dashboard_base.html" %}
 {% block content %}
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -39,7 +39,11 @@
             Add New User
         </a>
     </div>
-
+    
+    <div class="mb-4 text-gray-700 text-sm">
+        Total Users: <span class="font-semibold">{{ total_users }}</span>
+    </div>
+    
     <div class="bg-white shadow rounded-lg overflow-auto">
         <table class="min-w-full text-sm text-center">
             <thead class="bg-gray-100 text-gray-600 uppercase text-xs">

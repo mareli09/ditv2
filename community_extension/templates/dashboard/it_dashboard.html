@@ -1,14 +1,8 @@
-{% extends "dashboard/dashboard_base.html" %}
+{% extends "dashboard/it_dashboard_base.html" %}
 {% load static %}
 {% block content %}
 <div class="flex justify-between items-center mb-6">
     <h1 class="text-3xl font-semibold">Welcome, {{ user.username }}</h1>
-    <form action="{% url 'logout' %}" method="post">
-        {% csrf_token %}
-        <button type="submit" class="text-white bg-gray-800 hover:bg-black px-4 py-2 rounded">
-            Logout
-        </button>
-    </form>
 </div>
 
 <div class="container mt-5">
@@ -44,9 +38,12 @@
 
     <!-- Manage Users Button -->
     <div class="mt-8">
-        <a href="{% url 'manage_users' %}" class="text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg">
+        <a href="{% url 'manage_users' %}" class="text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 px-4 py-2 rounded-lg transition duration-200 ease-in-out">
             Manage Users
         </a>
+        <a href="{% url 'download_users_csv' %}" class="inline-block bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 text-white font-semibold px-4 py-2 rounded-lg mt-4 ml-4 transition duration-200 ease-in-out">
+            Download CSV Report
+        </a>        
     </div>
 
     <!-- User List with Status -->
@@ -86,11 +83,33 @@
                 {% endfor %}
             </tbody>
         </table>
-        
+        <!-- Pagination Controls -->
+        <div class="mt-6 flex justify-center space-x-2">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Previous</a>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <span class="px-4 py-2 bg-indigo-600 text-white rounded">{{ num }}</span>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?page={{ num }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Next</a>
+            {% endif %}
+        </div>
+
         <!-- Total User Count -->
         <div class="mt-4 text-center text-gray-700 font-medium">
-            Total Users: {{ users|length }}
+            Total Users: {{ total_users }}
         </div>
+        <div class="mt-2 text-sm text-gray-500">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </div>
+        
     </div>
 </div>
 <script>

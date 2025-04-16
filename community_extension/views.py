@@ -5,12 +5,13 @@ from django.contrib.auth import logout
 from django.urls import reverse
 from django.contrib import messages
 from .models import CustomUser, ActivityLog
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect,HttpResponse
 #from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
 from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator
+import csv
 
 
 # Static pages
@@ -128,25 +129,24 @@ def community_feedback(request, token):
 @login_required
 @user_passes_test(lambda u: u.is_authenticated and u.role == 'it_staff')
 def it_dashboard(request):
-    users = CustomUser.objects.all().order_by('-created_at')
+    all_users = CustomUser.objects.all().order_by('-created_at')  # Full queryset for stats
+    paginator = Paginator(all_users, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
-    # Count users by role
-    active_users_count = users.filter(is_active=True).count()
-    inactive_users_count = users.filter(is_active=False).count()
-    student_count = users.filter(role='student').count()
-    faculty_count = users.filter(role='faculty').count()
-    ceso_count = users.filter(role='ceso_staff').count()
-    it_count = users.filter(role='it_staff').count()
+    context = {
+        'active_users_count': all_users.filter(is_active=True).count(),
+        'inactive_users_count': all_users.filter(is_active=False).count(),
+        'student_count': all_users.filter(role='student').count(),
+        'faculty_count': all_users.filter(role='faculty').count(),
+        'ceso_count': all_users.filter(role='ceso_staff').count(),
+        'it_count': all_users.filter(role='it_staff').count(),
+        'users': page_obj,
+        'page_obj': page_obj,
+        'total_users': all_users.count(),  # ✅ Add this
+    }
 
-    return render(request, 'dashboard/it_dashboard.html', {
-        'active_users_count': active_users_count,
-        'inactive_users_count': inactive_users_count,
-        'student_count': student_count,
-        'faculty_count': faculty_count,
-        'ceso_count': ceso_count,
-        'it_count': it_count,
-        'users': users,
-    })
+    return render(request, 'dashboard/it_dashboard.html', context)
 
 @user_passes_test(lambda u: u.is_authenticated and u.role == 'it_staff')
 def toggle_user_status(request, user_id):
@@ -273,6 +273,9 @@ def manage_users(request):
         users = users.filter(role=role)
     if status:
         users = users.filter(status=status)
+        
+    total_users = CustomUser.objects.count()  # All users
+
 
     paginator = Paginator(users,5)  # 10 users per page
     page_number = request.GET.get('page')
@@ -281,5 +284,34 @@ def manage_users(request):
 
     return render(request, 'dashboard/manage_users.html', {
         'users': page_obj,
-        'page_obj': page_obj
-    })
+        'page_obj': page_obj,
+        'total_users': total_users, 
+    })    
+
+#for csv
+    
+@user_passes_test(lambda u: u.is_authenticated and u.role == 'it_staff')
+    
+def download_users_csv(request):
+    users = CustomUser.objects.all().order_by('-created_at')
+
+    # Create the HttpResponse object with CSV header.
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="users_report.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        'Username', 'Email', 'Role', 'Status', 'ID Number', 
+        'First Name', 'Middle Name', 'Last Name', 
+        'Department', 'Section', 'Course', 'Date Created'
+    ])
+
+    for user in users:
+        writer.writerow([
+            user.username, user.email, user.role, user.status,
+            user.id_number, user.first_name, user.middle_name,
+            user.last_name, user.department, user.section,
+            user.course, user.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        ])
+
+    return response

@@ -38,4 +38,8 @@ urlpatterns = [
     path('dashboard/it/edit-user/<int:user_id>/', views.edit_user, name='edit_user'),
     path('dashboard/it/logs/', views.view_logs, name='view_logs'),
     path('dashboard/it/toggle-status/<int:user_id>/', views.toggle_user_status, name='toggle_user_status'),
+    
+    #for csv
+    path('download-csv/', views.download_users_csv, name='download_users_csv'),
+
 ]
