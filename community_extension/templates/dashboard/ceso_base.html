@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}CESO Staff{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script defer>
+        function toggleMenu() {
+            const menu = document.getElementById("mobile-menu");
+            menu.classList.toggle("hidden");
+        }
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    <!-- Navigation Bar -->
+    <nav class="bg-indigo-700 text-white px-4 py-4 shadow-md">
+        <div class="flex items-center justify-between">
+            <div class="text-xl font-bold">CESO Dashboard</div>
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex space-x-4 text-sm md:text-base">
+                <a href="{% url 'cesostaff_dashboard' %}" class="hover:text-gray-300">Dashboard</a>
+                <a href="{% url 'create_activity' %}" class="hover:text-gray-300">Create</a>
+                <a href="{% url 'activities' %}" class="hover:text-gray-300">Activities</a>
+                <a href="#" class="hover:text-gray-300">Sentiment</a>
+                <a href="#" class="hover:text-gray-300">Certificates</a>
+                <a href="#" class="hover:text-gray-300">Feedback</a>
+                <a href="#" class="hover:text-gray-300">Impact</a>
+                <form action="{% url 'logout' %}" method="post" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="hover:text-gray-300">Logout</button>
+                </form>
+            </div>
+
+            <!-- Hamburger -->
+            <div class="md:hidden">
+                <button onclick="toggleMenu()" class="focus:outline-none">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="md:hidden hidden mt-4 space-y-2">
+            <a href="{% url 'cesostaff_dashboard' %}" class="block hover:text-gray-300">Dashboard</a>
+            <a href="{% url 'create_activity' %}" class="block hover:text-gray-300">Create</a>
+            <a href="{% url 'activities' %}" class="block hover:text-gray-300">Activities</a>
+            <a href="#" class="block hover:text-gray-300">Sentiment</a>
+            <a href="#" class="block hover:text-gray-300">Certificates</a>
+            <a href="#" class="block hover:text-gray-300">Feedback</a>
+            <a href="#" class="block hover:text-gray-300">Impact</a>
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="block w-full text-left hover:text-gray-300">Logout</button>
+            </form>
+        </div>
+    </nav>
+
+    <main class="p-4 md:p-6">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+</body>
+</html>
